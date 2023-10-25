@@ -1155,7 +1155,7 @@ namespace xt
             step_dim = cut;
         }
 #if defined(XTENSOR_USE_OPENMP) && defined(strided_parallel_assign)
-        if (outer_loop_size >= XTENSOR_OPENMP_THRESHOLD / inner_loop_size)
+        if (outer_loop_size >= XTENSOR_OPENMP_TRESHOLD / inner_loop_size)
         {
             std::size_t first_step = true;
 #pragma omp parallel for schedule(static) firstprivate(first_step, fct_stepper, res_stepper, idx)
@@ -1177,7 +1177,7 @@ namespace xt
 
                 for (std::size_t i = 0; i < simd_size; ++i)
                 {
-                    res_stepper.template store_simd<simd_type>(fct_stepper.template step_simd<value_type>());
+                    res_stepper.template store_simd(fct_stepper.template step_simd<value_type>());
                 }
                 for (std::size_t i = 0; i < simd_rest; ++i)
                 {
@@ -1191,13 +1191,24 @@ namespace xt
                     ? strided_assign_detail::idx_tools<layout_type::row_major>::next_idx(idx, max_shape)
                     : strided_assign_detail::idx_tools<layout_type::column_major>::next_idx(idx, max_shape);
 
-                // need to step E1 as well if not contigous assign (e.g. view)
                 fct_stepper.to_begin();
-                res_stepper.to_begin();
-                for (std::size_t i = 0; i < idx.size(); ++i)
+
+                // need to step E1 as well if not contigous assign (e.g. view)
+                if (!E1::contiguous_layout)
                 {
-                    fct_stepper.step(i + step_dim, idx[i]);
-                    res_stepper.step(i + step_dim, idx[i]);
+                    res_stepper.to_begin();
+                    for (std::size_t i = 0; i < idx.size(); ++i)
+                    {
+                        fct_stepper.step(i + step_dim, idx[i]);
+                        res_stepper.step(i + step_dim, idx[i]);
+                    }
+                }
+                else
+                {
+                    for (std::size_t i = 0; i < idx.size(); ++i)
+                    {
+                        fct_stepper.step(i + step_dim, idx[i]);
+                    }
                 }
             }
         }
@@ -1241,9 +1252,7 @@ namespace xt
 
                         for (std::size_t i = 0; i < simd_size; ++i)
                         {
-                            res_stepper.template store_simd(
-                                fct_stepper.template step_simd<value_type>()
-                            );
+                            res_stepper.template store_simd(fct_stepper.template step_simd<value_type>());
                         }
                         for (std::size_t i = 0; i < simd_rest; ++i)
                         {
@@ -1257,13 +1266,24 @@ namespace xt
                             ? strided_assign_detail::idx_tools<layout_type::row_major>::next_idx(idx, max_shape)
                             : strided_assign_detail::idx_tools<layout_type::column_major>::next_idx(idx, max_shape);
 
-                        // need to step E1 as well if not contigous assign (e.g. view)
                         fct_stepper.to_begin();
-                        res_stepper.to_begin();
-                        for (std::size_t i = 0; i < idx.size(); ++i)
+
+                        // need to step E1 as well if not contigous assign (e.g. view)
+                        if (!E1::contiguous_layout)
                         {
-                            fct_stepper.step(i + step_dim, idx[i]);
-                            res_stepper.step(i + step_dim, idx[i]);
+                            res_stepper.to_begin();
+                            for (std::size_t i = 0; i < idx.size(); ++i)
+                            {
+                                fct_stepper.step(i + step_dim, idx[i]);
+                                res_stepper.step(i + step_dim, idx[i]);
+                            }
+                        }
+                        else
+                        {
+                            for (std::size_t i = 0; i < idx.size(); ++i)
+                            {
+                                fct_stepper.step(i + step_dim, idx[i]);
+                            }
                         }
                     }
                 },
@@ -1315,12 +1335,12 @@ namespace xt
         }
 #endif
     }
+
     template <>
     template <class E1, class E2>
     inline void strided_loop_assigner<true>::run(E1& e1, const E2& e2)
     {
-        strided_assign_detail::loop_sizes_t
-            loop_sizes = strided_loop_assigner<true>::get_loop_sizes(e1, e2);
+        strided_assign_detail::loop_sizes_t loop_sizes = strided_loop_assigner<true>::get_loop_sizes(e1, e2);
         if (loop_sizes.can_do_strided_assign)
         {
             run(e1, e2, loop_sizes);
@@ -1337,6 +1357,7 @@ namespace xt
     inline void strided_loop_assigner<false>::run(E1& /*e1*/, const E2& /*e2*/, const loop_sizes_t&)
     {
     }
+
     template <>
     template <class E1, class E2>
     inline void strided_loop_assigner<false>::run(E1& e1, const E2& e2)
