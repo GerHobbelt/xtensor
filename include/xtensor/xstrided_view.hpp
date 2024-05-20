@@ -809,41 +809,28 @@ namespace xt
 
     namespace detail
     {
-        // if shape is signed do the check
-        template <class S, class R>
-        using do_shape_recalculation = std::
-            enable_if_t<std::is_signed<get_value_type_t<typename std::decay<S>::type>>::value, R>;
-
-        // if shape is unsigned pass through
-        template <class S, class R>
-        using no_shape_recalculation = std::
-            enable_if_t<!std::is_signed<get_value_type_t<typename std::decay<S>::type>>::value, R>;
-
-        template <typename T>
-        inline no_shape_recalculation<T, T> make_unsigned_shape(T shape)
-        {
-            return shape;
-        }
-
-        template <typename S, typename Enable = void>
+        template <typename S>
         struct rebind_shape;
 
-        template <class S>
-        struct rebind_shape<S, std::enable_if_t<!std::is_signed<get_value_type_t<typename std::decay_t<S>>>::value>>
+        template <std::size_t... X>
+        struct rebind_shape<xt::fixed_shape<X...>>
         {
-            using type = S;
+            using type = xt::fixed_shape<X...>;
         };
 
         template <class S>
-        struct rebind_shape<S, std::enable_if_t<std::is_signed<get_value_type_t<typename std::decay_t<S>>>::value>>
+        struct rebind_shape
         {
-            using Shape = rebind_container_t<size_t, S>;
+            using type = rebind_container_t<size_t, S>;
         };
 
-        template <class S, do_shape_recalculation<S, bool> = true>
-        inline auto recalculate_shape_impl(S& shape, size_t size)
+        template <
+            class S,
+            std::enable_if_t<std::is_signed<get_value_type_t<typename std::decay<S>::type>>::value, bool> = true>
+        inline void recalculate_shape_impl(S& shape, size_t size)
         {
             using value_type = get_value_type_t<typename std::decay_t<S>>;
+            XTENSOR_ASSERT(std::count(shape.cbegin(), shape.cend(), -1) <= 1);
             auto iter = std::find(shape.begin(), shape.end(), -1);
             if (iter != std::end(shape))
             {
@@ -851,13 +838,13 @@ namespace xt
                 const auto missing_dimension = size / total;
                 (*iter) = static_cast<value_type>(missing_dimension);
             }
-            return shape;
         }
 
-        template <class S, no_shape_recalculation<S, bool> = true>
-        inline auto recalculate_shape_impl(S& shape, size_t)
+        template <
+            class S,
+            std::enable_if_t<!std::is_signed<get_value_type_t<typename std::decay<S>::type>>::value, bool> = true>
+        inline void recalculate_shape_impl(S&, size_t)
         {
-            return shape;
         }
 
         template <class S>
@@ -876,7 +863,7 @@ namespace xt
         );
 
         using shape_type = std::decay_t<decltype(shape)>;
-        using unsigned_shape_type = typename detail::rebind_shape<shape_type>::Shape;
+        using unsigned_shape_type = typename detail::rebind_shape<shape_type>::type;
         get_strides_t<unsigned_shape_type> strides;
 
         detail::recalculate_shape(shape, e.size());
