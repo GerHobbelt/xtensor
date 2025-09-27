@@ -286,7 +286,7 @@ namespace xt
      * with tensor semantic and fixed dimension
      *
      * @tparam ET The type of the elements.
-     * @tparam S The xshape template paramter of the container.
+     * @tparam S The xshape template parameter of the container.
      * @tparam L The layout_type of the tensor.
      * @tparam SH Wether the tensor can be used as a shared expression.
      * @tparam Tag The expression tag.
