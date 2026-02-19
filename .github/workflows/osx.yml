@@ -18,14 +18,13 @@ jobs:
       fail-fast: false
       matrix:
         os:
-        - 13
         - 14
         - 15
 
     steps:
 
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set conda environment
       uses: mamba-org/setup-micromamba@main
