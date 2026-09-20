@@ -13,8 +13,6 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <iterator>
-#include <numeric>
 #include <type_traits>
 #include <utility>
 
@@ -98,25 +96,25 @@ namespace xt
      *****************************/
 
     template <class CT, class X>
-    XTENSOR_CONSTEXPR_RETURN auto linear_begin(xbroadcast<CT, X>& c) noexcept
+    constexpr auto linear_begin(xbroadcast<CT, X>& c) noexcept
     {
         return linear_begin(c.expression());
     }
 
     template <class CT, class X>
-    XTENSOR_CONSTEXPR_RETURN auto linear_end(xbroadcast<CT, X>& c) noexcept
+    constexpr auto linear_end(xbroadcast<CT, X>& c) noexcept
     {
         return linear_end(c.expression());
     }
 
     template <class CT, class X>
-    XTENSOR_CONSTEXPR_RETURN auto linear_begin(const xbroadcast<CT, X>& c) noexcept
+    constexpr auto linear_begin(const xbroadcast<CT, X>& c) noexcept
     {
         return linear_begin(c.expression());
     }
 
     template <class CT, class X>
-    XTENSOR_CONSTEXPR_RETURN auto linear_end(const xbroadcast<CT, X>& c) noexcept
+    constexpr auto linear_end(const xbroadcast<CT, X>& c) noexcept
     {
         return linear_end(c.expression());
     }

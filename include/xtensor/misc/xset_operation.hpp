@@ -11,7 +11,6 @@
 #define XTENSOR_XSET_OPERATION_HPP
 
 #include <algorithm>
-#include <functional>
 #include <type_traits>
 
 #include <xtl/xsequence.hpp>
@@ -25,6 +24,11 @@
 
 namespace xt
 {
+    /**
+     * @defgroup searchsorted Searchsorted helpers
+     * @brief Helpers for locating insertion indices in sorted arrays.
+     */
+
 
     namespace detail
     {
